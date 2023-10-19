@@ -1,17 +1,12 @@
-import os
-import motor
-from motor import motor_asyncio
+from mongo_db import db
 from fastapi import FastAPI, Response, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from typing import Annotated, Optional
-
-
 import uuid
+from common import short_url_to_long, create_short_url
 
 app = FastAPI()
 
-client = motor_asyncio.AsyncIOMotorClient('mongodb://root:example@localhost:27017')
-db = client.short_link
 
 @app.get("/", response_class=HTMLResponse)
 async def read_items():
@@ -36,21 +31,16 @@ async def read_items():
 
 @app.post("/")
 async def root(long_url: Annotated[str, Form()], short_url: Optional[str] = Form(None)):
-
-    if short_url:
-        exists_short_url = await db.links.find_one({'short_url': short_url})
-        if exists_short_url:
-            return {'error': 'short link already created'}
-    else:
-        short_url = str(uuid.uuid4())
-    new_link = await db.links.insert_one({'short_url': short_url, 'long_url': long_url})
-    return short_url
+    url = await create_short_url(long_url, short_url)
+    return url
 
 
 @app.get("/{short_url}")
 async def to_long(short_url: str):
-    original_link = await db.links.find_one({'short_url': short_url})
-    return RedirectResponse(original_link['long_url'])
+    original_link = await short_url_to_long(short_url)
+    data = await db.links.find_one({'short_url': short_url})
+    await db.redirects.insert_one({'short_url': short_url, 'owner': data['user_id']})
+    return RedirectResponse(original_link)
 
 
 @app.post("/{short_url}")
