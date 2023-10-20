@@ -30,9 +30,20 @@ async def get_all_urls(user_id):
 
 
 async def redirect_count(user_id):
-    result = []
-    data = db.redirects.find({'owner': user_id})
-    async for val in data:
-        result.append(val['short_url'])
-    redirect_counts = Counter(result)
+    match_filter = {
+        "$match": {'owner': user_id}
+    }
+
+    group = {
+        "$group": {
+            "_id": "$short_url",
+            "links_count": {"$sum": 1},
+        }
+    }
+    pipeline = [
+            match_filter,
+            group
+        ]
+
+    redirect_counts = db.redirects.aggregate(pipeline)
     return redirect_counts

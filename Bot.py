@@ -3,7 +3,7 @@ from telebot.types import Message
 from common import create_short_url, short_url_to_long, get_all_urls, redirect_count
 import asyncio
 
-bot = AsyncTeleBot('your token')
+bot = AsyncTeleBot('6463325254:AAEYrE-QY5ZeSupWUUA2DS_CjCQTHNc9BJ8')
 
 
 @bot.message_handler(commands=['help', 'start'])
@@ -35,8 +35,10 @@ async def show_all_url(message: Message):
 @bot.message_handler(commands=['redirects'])
 async def redirects(message: Message):
     link_count_redirects = await redirect_count(message.from_user.id)
-    list_of_text_links = [f'short link: {key}: \r\nredirect times: {val}' for key, val in link_count_redirects.items()]
-    await bot.send_message(message.chat.id, '\r\n'.join(list_of_text_links) if list_of_text_links else 'Nothing')
+    list_data = []
+    async for data in link_count_redirects:
+        list_data.append(f"links: {data['_id']}: redirect count: {data['links_count']}")
+    await bot.send_message(message.chat.id, '\r\n'.join(list_data) if list_data else 'Nothing')
 
 
 @bot.message_handler(func=lambda message: True)
