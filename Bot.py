@@ -3,7 +3,7 @@ from telebot.types import Message
 from common import create_short_url, short_url_to_long, get_all_urls, redirect_count
 import asyncio
 
-bot = AsyncTeleBot('6463325254:AAEYrE-QY5ZeSupWUUA2DS_CjCQTHNc9BJ8')
+bot = AsyncTeleBot('')
 
 
 @bot.message_handler(commands=['help', 'start'])
